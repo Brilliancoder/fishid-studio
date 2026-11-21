@@ -420,6 +420,20 @@ def inject_enterprise_css() -> None:
                 box-shadow: 0 2px 10px rgba(10, 151, 217, 0.38);
             }
 
+            .pill-tech {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.35rem;
+                background: rgba(20, 184, 166, 0.22);
+                border: 1px solid rgba(94, 234, 212, 0.45);
+                color: #CCFBF1;
+                padding: 0.26rem 0.72rem;
+                border-radius: 999px;
+                font-size: 0.73rem;
+                font-weight: 700;
+                letter-spacing: 0.02em;
+            }
+
             .pill-status {
                 display: inline-flex;
                 align-items: center;
@@ -1938,6 +1952,7 @@ def render_executive_hero(backend_info: dict[str, Any], total_gallery_photos: in
                 <div class="hero-pills">
                     <span class="pill-brand">🎓 Pesquisa de Mestrado em Computação Aplicada</span>
                     <span class="pill-ods">🌊 ODS 14 · Vida na Água (ONU)</span>
+                    <span class="pill-tech">🧠 Deep Learning &amp; Visão Computacional</span>
                 </div>
                 <span class="pill-status"><span class="{dot_cls}"></span>{status_txt}</span>
             </div>

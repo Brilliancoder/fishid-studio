@@ -5,7 +5,7 @@
 <h1 align="center">🐟 FishID Studio</h1>
 
 <p align="center">
-  <strong>Pesquisa de Mestrado · Modelo Deep Learning para Identificação de Espécies de Peixes Marinhos</strong><br/>
+  <strong>Pesquisa de Mestrado em Computação Aplicada · Modelo Deep Learning para Identificação de Espécies de Peixes Marinhos</strong><br/>
   Projeto <em>Open Source</em> desenvolvido por <a href="https://github.com/viniciusscience"><strong>José Vinícius da Silva de Souza</strong></a>
 </p>
 

@@ -51,7 +51,7 @@ if not PIX_PAYLOAD and PIX_KEY.startswith("000201"):
     PIX_KEY = ""
 
 AUTHOR_NAME: str = "José Vinícius da Silva de Souza"
-RESEARCH_TITLE: str = "Pesquisa de Mestrado · Modelo Deep Learning para Identificação de Espécies de Peixes"
+RESEARCH_TITLE: str = "Pesquisa de Mestrado em Computação Aplicada · Modelo Deep Learning para Identificação de Espécies de Peixes"
 
 SPECIES_CATALOG_FALLBACK: list[dict[str, str]] = [
     {"scientific": "Coryphaena hippurus", "common_pt": "Dourado-do-mar", "group": "Pelágico"},
@@ -145,9 +145,67 @@ def inject_enterprise_css() -> None:
                 padding-bottom: 3.5rem;
             }
 
-            [data-testid="stMainBlockContainer"] [data-testid="stElementContainer"] {
+            [data-testid="stMainBlockContainer"] > [data-testid="stVerticalBlock"] > [data-testid="stElementContainer"] {
                 position: relative;
                 z-index: 2;
+            }
+
+            /* ================= MODAL FULLSCREEN DE FOTOS (ACIMA DE TUDO, SEM BUG) ================= */
+            .stApp:has(button[aria-label="Close fullscreen"]) .st-key-top_navbar,
+            .stApp:has(button[aria-label="Close fullscreen"]) [data-testid="stElementContainer"]:has(.st-key-top_navbar) {
+                opacity: 0 !important;
+                pointer-events: none !important;
+                z-index: 1 !important;
+            }
+
+            [data-testid="stElementContainer"]:has(button[aria-label="Close fullscreen"]),
+            [data-testid="stColumn"]:has(button[aria-label="Close fullscreen"]),
+            [data-testid="stHorizontalBlock"]:has(button[aria-label="Close fullscreen"]),
+            [data-testid="stVerticalBlock"]:has(button[aria-label="Close fullscreen"]),
+            [data-testid="stVerticalBlockBorderWrapper"]:has(button[aria-label="Close fullscreen"]),
+            [data-testid="stTabs"]:has(button[aria-label="Close fullscreen"]),
+            [data-testid="stTabPanel"]:has(button[aria-label="Close fullscreen"]) {
+                z-index: 99998 !important;
+                backdrop-filter: none !important;
+                -webkit-backdrop-filter: none !important;
+                transform: none !important;
+                filter: none !important;
+            }
+
+            [data-testid="stFullScreenFrame"]:has(button[aria-label="Close fullscreen"]) {
+                position: fixed !important;
+                inset: 0 !important;
+                width: 100vw !important;
+                height: 100vh !important;
+                z-index: 99999 !important;
+                background: rgba(4, 20, 32, 0.94) !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                padding: 1.5rem !important;
+            }
+
+            [data-testid="stFullScreenFrame"]:has(button[aria-label="Close fullscreen"]) button[aria-label="Close fullscreen"] {
+                position: fixed !important;
+                top: 16px !important;
+                right: 16px !important;
+                z-index: 100000 !important;
+                width: 42px !important;
+                height: 42px !important;
+                border-radius: 999px !important;
+                background: #FFFFFF !important;
+                color: #0F172A !important;
+                border: 2px solid #0F766E !important;
+                box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45) !important;
+                cursor: pointer !important;
+                display: inline-flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+            }
+
+            [data-testid="stFullScreenFrame"]:has(button[aria-label="Close fullscreen"]) button[aria-label="Close fullscreen"]:hover {
+                background: #F0FDFA !important;
+                transform: scale(1.06) !important;
             }
 
             [data-testid="stMainBlockContainer"] [data-testid="stElementContainer"]:has(.ocean-bg),
@@ -391,8 +449,46 @@ def inject_enterprise_css() -> None:
                 font-size: 0.96rem;
                 line-height: 1.55;
                 color: rgba(241, 245, 249, 0.9);
-                max-width: 780px;
-                margin: 0 0 1.2rem 0;
+                max-width: 820px;
+                margin: 0 0 1.1rem 0;
+            }
+
+            .hero-author-row {
+                display: flex;
+                align-items: center;
+                flex-wrap: wrap;
+                gap: 0.5rem;
+                margin: 0.15rem 0 0.75rem 0;
+            }
+
+            .hero-author-badge {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.45rem;
+                background: linear-gradient(135deg, rgba(45, 212, 191, 0.22) 0%, rgba(14, 165, 233, 0.22) 100%);
+                border: 1px solid rgba(94, 234, 212, 0.55);
+                color: #FFFFFF !important;
+                text-decoration: none !important;
+                padding: 0.34rem 0.9rem;
+                border-radius: 999px;
+                font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+                font-size: 0.92rem;
+                font-weight: 700;
+                letter-spacing: -0.01em;
+                box-shadow: 0 4px 16px rgba(20, 184, 166, 0.26);
+                transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+            }
+
+            .hero-author-badge:hover {
+                transform: translateY(-1px);
+                background: linear-gradient(135deg, rgba(45, 212, 191, 0.34) 0%, rgba(14, 165, 233, 0.34) 100%);
+                border-color: #99F6E4;
+            }
+
+            .hero-author-prefix {
+                font-weight: 500;
+                color: #CCFBF1;
+                font-size: 0.84rem;
             }
 
             .hero-stats {
@@ -1781,7 +1877,7 @@ def render_top_navbar() -> None:
                         <div class="pix-qr-card">
                             <img class="pix-qr-img" src="{qr_uri}" alt="QR Code Pix Apoie a Pesquisa" />
                             <div class="pix-qr-caption">Escaneie com o app do seu banco (Pix)</div>
-                            <div class="pix-qr-sub">{html.escape(AUTHOR_NAME)} · Pesquisa de Mestrado</div>
+                            <div class="pix-qr-sub">{html.escape(AUTHOR_NAME)} · Mestrado em Computação Aplicada</div>
                         </div>
                         """,
                         unsafe_allow_html=True,
@@ -1831,7 +1927,7 @@ def render_top_navbar() -> None:
 
 def render_executive_hero(backend_info: dict[str, Any], total_gallery_photos: int = 0) -> None:
     dot_cls = "dot-live"
-    status_txt = "ConvNeXt-Tiny · Online" if backend_info.get("mode") == "real" else "Sistema Online"
+    status_txt = "Sistema Online"
     catalog = backend_info.get("species_catalog") or SPECIES_CATALOG_FALLBACK
     photos_display = f"{total_gallery_photos:,}".replace(",", ".") + " Fotos" if total_gallery_photos >= 100 else "6.500+ Fotos"
 
@@ -1840,14 +1936,20 @@ def render_executive_hero(backend_info: dict[str, Any], total_gallery_photos: in
         <div class="exec-hero">
             <div class="hero-top-row">
                 <div class="hero-pills">
-                    <span class="pill-brand">🎓 Pesquisa de Mestrado</span>
+                    <span class="pill-brand">🎓 Pesquisa de Mestrado em Computação Aplicada</span>
                     <span class="pill-ods">🌊 ODS 14 · Vida na Água (ONU)</span>
                 </div>
                 <span class="pill-status"><span class="{dot_cls}"></span>{status_txt}</span>
             </div>
             <h1 class="hero-title">Identificação Inteligente de Espécies Marinhas</h1>
+            <div class="hero-author-row">
+                <a class="hero-author-badge" href="{html.escape(GITHUB_URL)}" target="_blank" rel="noopener noreferrer">
+                    <span class="hero-author-prefix">Desenvolvido por</span>
+                    <span>👨‍💻 {html.escape(AUTHOR_NAME)}</span>
+                </a>
+            </div>
             <p class="hero-desc">
-                <strong>{html.escape(RESEARCH_TITLE)}</strong> — desenvolvido por <strong>{html.escape(AUTHOR_NAME)}</strong>.
+                <strong>{html.escape(RESEARCH_TITLE)}</strong>.
                 Fotografe pelo celular, envie uma imagem ou analise vídeos para reconhecer grandes peixes migratórios em segundos.
             </p>
             <div class="hero-stats">
@@ -1861,7 +1963,7 @@ def render_executive_hero(backend_info: dict[str, Any], total_gallery_photos: in
                 </div>
                 <div class="hero-stat">
                     <div class="hero-stat-val">Deep Learning</div>
-                    <div class="hero-stat-lbl">Visão computacional ConvNeXt-Tiny</div>
+                    <div class="hero-stat-lbl">Visão computacional aplicada</div>
                 </div>
                 <div class="hero-stat">
                     <div class="hero-stat-val">Ciência Aberta</div>
@@ -1934,7 +2036,7 @@ def render_result_card(result: dict[str, Any], image_size: tuple[int, int]) -> N
     scientific = html.escape(str(result.get("scientific_name", "")))
     conf = float(result.get("confidence", 0.0))
     pct = conf * 100.0
-    mode_label = "ConvNeXt-Tiny"
+    mode_label = "IA Marinha · Deep Learning"
     res_label = f"{image_size[0]} × {image_size[1]} px"
 
     if conf >= 0.80:

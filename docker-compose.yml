@@ -1,0 +1,31 @@
+services:
+  backend:
+    build: ./backend
+    container_name: fishid-backend
+    ports:
+      - "8000:8080"
+    env_file:
+      - .env
+    volumes:
+      - ./backend/main.py:/app/main.py
+      - ./backend/storage.py:/app/storage.py
+      - ./backend/models:/app/models
+      - ./backend/collected_data:/app/collected_data
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    container_name: fishid-frontend
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    environment:
+      - BACKEND_URL=http://backend:8080
+    volumes:
+      - ./frontend/app.py:/app/app.py
+      - ./frontend/assets:/app/assets
+      - ./frontend/.streamlit:/app/.streamlit
+    depends_on:
+      - backend
+    restart: unless-stopped

@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+.env
+*.log
+.DS_Store
+Thumbs.db
+backend/models/*.keras
+backend/models/*.h5
+!backend/models/.gitkeep
+backend/collected_data/*
+!backend/collected_data/.gitkeep

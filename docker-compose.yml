@@ -22,10 +22,12 @@ services:
       - .env
     environment:
       - BACKEND_URL=http://backend:8080
+      - EM_EXPERIMENTS_DIR=/app/experimentos_em
     volumes:
       - ./frontend/app.py:/app/app.py
       - ./frontend/assets:/app/assets
       - ./frontend/.streamlit:/app/.streamlit
+      - ./experimentos_em:/app/experimentos_em:ro
     depends_on:
       - backend
     restart: unless-stopped

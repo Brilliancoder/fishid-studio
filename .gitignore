@@ -13,3 +13,5 @@ backend/models/*.h5
 !backend/models/.gitkeep
 backend/collected_data/*
 !backend/collected_data/.gitkeep
+experimentos_em/
+*.pt

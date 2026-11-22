@@ -5,8 +5,15 @@
 <h1 align="center">🐟 FishID Studio</h1>
 
 <p align="center">
-  <strong>Pesquisa de Mestrado em Computação Aplicada · Modelo Deep Learning para Identificação de Espécies de Peixes Marinhos</strong><br/>
-  Projeto <em>Open Source</em> desenvolvido por <a href="https://github.com/viniciusscience"><strong>José Vinícius da Silva de Souza</strong></a>
+  <img src="frontend/assets/logos/univali_logo.png" alt="UNIVALI — Universidade do Vale do Itajaí" height="64" />
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <img src="frontend/assets/logos/lema_logo.png" alt="LEMA — Laboratório de Estudos Marinhos Aplicados" height="58" />
+</p>
+
+<p align="center">
+  <strong>Pesquisa de Mestrado em Computação Aplicada · UNIVALI · LEMA (Laboratório de Estudos Marinhos Aplicados)</strong><br/>
+  Modelo Deep Learning para Identificação de Espécies de Peixes Marinhos<br/>
+  <strong>Autor:</strong> <a href="https://github.com/viniciusscience"><strong>José Vinícius da Silva de Souza</strong></a> &nbsp;·&nbsp; <strong>Coautor e Orientador:</strong> <strong>Prof. Dr. Rodrigo Sant'Ana</strong>
 </p>
 
 <p align="center">
@@ -19,6 +26,26 @@
 </p>
 
 **FishID Studio** é uma plataforma aberta de visão computacional voltada à **identificação automatizada de grandes peixes migratórios marinhos** por meio de fotos, câmera de celular e vídeos. O projeto nasceu como pesquisa de mestrado em Computação Aplicada, combinando rigor científico (*ConvNeXt-Tiny*, explicabilidade via *Grad-CAM*, auto-segmentação *YOLO-World + SAM 2* e rastreamento *ByteTrack*) com uma interface imersiva em **PixiJS v8 WebGL** responsiva para empresas, pesquisadores e ciência cidadã.
+
+---
+
+## 🎬 Demonstração Real — Monitoramento Eletrônico & Biometria no Convés
+
+Análise automatizada de vídeos reais de embarcações pesqueiras (**Monitoramento Eletrônico — EM**), realizando **contagem consolidada de indivíduos**, **medição de comprimento ponta a ponta acompanhando a curvatura do corpo**, **margem de erro estimada (±%)** e **calibração interativa `px ↔ cm`**:
+
+<p align="center">
+  <img src="docs/fishid_em_demo.gif" alt="FishID Studio — Demonstração Real de Monitoramento Eletrônico (UNIVALI · LEMA)" width="92%"/>
+</p>
+
+<p align="center">
+  <img src="docs/em_biometria_destaque_1.jpg" alt="FishID Studio — Biometria Ponta a Ponta em Convés Diurno (UNIVALI · LEMA)" width="92%"/><br/>
+  <sub><i>Auditoria visual em recolhimento diurno: contorno automático do corpo inteiro e curva da coluna vertebral.</i></sub>
+</p>
+
+<p align="center">
+  <img src="docs/em_biometria_destaque_2.jpg" alt="FishID Studio — Biometria de Alta Qualidade em Recolhimento Noturno (UNIVALI · LEMA)" width="92%"/><br/>
+  <sub><i>Auditoria visual em recolhimento na madrugada: medição de alta qualidade (±3,2%) com 0% de oclusão.</i></sub>
+</p>
 
 ---
 
@@ -67,11 +94,14 @@ O modelo atual foi treinado com mais de **6.200 imagens** distribuídas entre 10
 - **📸 Captura pela Câmera do Celular e Upload:** interface 100% responsiva pensada para uso rápido em campo, embarcações e empresas.
 - **🐠 Galeria Interativa:** navegação sob demanda com filtro por espécie e sorteio instantâneo para demonstração.
 - **🎥 Análise de Vídeos (MP4 / MOV):** anotação automática frame a frame com OpenCV, conversão H.264 via `ffmpeg`, resumo por espécie e download do vídeo anotado.
+- **📊 Monitoramento Eletrônico (EM) — Contagem & Biometria:** aba dedicada no FishID Studio para auditar vídeos longos de embarcações pesqueiras (`monitoramento_em.py`), exibindo contagem consolidada anti-oclusão, comprimento médio com estimativa de erro (`±%`), classe do peixe, calibração interativa `px → cm`, galeria de auditoria visual (`SAM 2.1` + curva da coluna vertebral) e vídeo HUD.
 - **🤝 Aprendizado Contínuo com Filtro de Qualidade:** validação automática de nitidez, brilho, contraste e resolução (`backend/storage.py`) separando fotos confirmadas de revisão humana, com armazenamento adaptável (**Local**, **AWS S3 / R2** ou **Google Cloud Storage**) controlado via variáveis de ambiente.
 - **🔬 Pipeline Científico Reprodutível:**
   - `ConvNeXt_Tiny_Otimizado_Mestrado.ipynb` — preservação morfológica (`resize_with_pad`), `mixed_float16`, `CosineDecay`, `MixUp`, `TTA` e **Grad-CAM comparativo**.
   - `segmentar_peixes_auto.py` — auto-segmentação e recorte turbo em lote (`YOLO-World` + `SAM 2.1`, FP16 e I/O paralelo).
   - `rastrear_peixes_auto.py` — rastreamento multi-peixe em vídeo (`YOLO-World` + `ByteTrack`), CSV de trajetórias e auto-rotulagem YOLO.
+  - `monitoramento_em.py` — pipeline v5 de Monitoramento Eletrônico para vídeos longos (`YOLOv8l-Worldv2` com `agnostic_nms` + `ByteTrack` + consolidação espaço-temporal + `SAM 2.1` refinado por ponto interior + medição curva pela crista `distanceTransform²` + filtro HSV anti-boias + vídeo HUD).
+  - `rodar_suite_benchmark.py` — suíte automatizada de 10 experimentos controlados (ablação, cenas diurnas/noturnas e testes de estresse anti-falso positivo) com registro centralizado em `experimentos_em/`.
 
 ---
 
@@ -102,13 +132,18 @@ projeto-mestrado/
 │   └── assets/bg/*_real.png               # Sprites fotorrealistas transparentes dos peixes
 │
 ├── docs/
-│   └── fishid_aquarium_banner.gif         # Banner animado do aquário para apresentação
+│   ├── fishid_aquarium_banner.gif         # Banner animado do aquário para apresentação
+│   ├── fishid_em_demo.gif                 # GIF demo real de Monitoramento Eletrônico (UNIVALI · LEMA)
+│   ├── em_biometria_destaque_1.jpg        # Card de auditoria de biometria (recolhimento diurno)
+│   └── em_biometria_destaque_2.jpg        # Card de auditoria de biometria (recolhimento noturno)
 │
 ├── docker-compose.yml                     # Orquestração local (frontend + backend)
 ├── .env.example                           # Modelo limpo de variáveis de ambiente
 ├── ConvNeXt_Tiny_Otimizado_Mestrado.ipynb # Notebook de treinamento e análise Grad-CAM
 ├── segmentar_peixes_auto.py               # Auto-segmentação em lote (YOLO-World + SAM 2.1)
 ├── rastrear_peixes_auto.py                # Rastreamento multi-peixe em vídeo (ByteTrack)
+├── monitoramento_em.py                    # Pipeline v5 EM (contagem, biometria curva e HUD)
+├── rodar_suite_benchmark.py               # Suíte controlada de 10 experimentos + comparativo
 └── LICENSE                                # Licença MIT e Direitos Autorais
 ```
 
@@ -145,9 +180,10 @@ O **FishID Studio** é um projeto acadêmico **100% aberto e gratuito**. Se a fe
 
 ```bibtex
 @misc{souza2026fishidstudio,
-  author       = {José Vinícius da Silva de Souza},
+  author       = {José Vinícius da Silva de Souza and Rodrigo Sant'Ana},
   title        = {FishID Studio: Modelo Deep Learning para Identificação de Espécies de Peixes Marinhos},
   year         = {2026},
+  institution  = {Universidade do Vale do Itajaí (UNIVALI) — Laboratório de Estudos Marinhos Aplicados (LEMA)},
   note         = {Projeto Open Source de Pesquisa de Mestrado em Computação Aplicada}
 }
 ```
@@ -161,8 +197,8 @@ O **FishID Studio** é um projeto acadêmico **100% aberto e gratuito**. Se a fe
 
 ## ©️ Direitos Autorais e Licença
 
-**Copyright © 2026 José Vinícius da Silva de Souza.** Todos os direitos reservados conforme os termos da **Licença MIT** ([LICENSE](LICENSE)).
+**Copyright © 2026 José Vinícius da Silva de Souza e Rodrigo Sant'Ana (LEMA · UNIVALI).** Todos os direitos reservados conforme os termos da **Licença MIT** ([LICENSE](LICENSE)).
 
-- **Uso do código-fonte:** livre para uso acadêmico, educacional, comercial, modificação e redistribuição, **desde que mantido o aviso de direitos autorais e atribuição ao autor original e à pesquisa de mestrado**.
+- **Uso do código-fonte:** livre para uso acadêmico, educacional, comercial, modificação e redistribuição, **desde que mantido o aviso de direitos autorais e atribuição aos autores, ao LEMA e à pesquisa de mestrado na UNIVALI**.
 - **Bases de dados e imagens:** as imagens de treinamento provenientes de fontes abertas (como *iNaturalist* e *FishBase*) seguem suas respectivas licenças originais. Fotos enviadas voluntariamente pelos usuários por meio do recurso *"Aprendizado contínuo"* são coletadas mediante consentimento explícito exclusivamente para fins de pesquisa científica, aprimoramento do modelo e expansão do catálogo de espécies.
 - **Aviso técnico:** as identificações geradas pelo modelo têm caráter de apoio à decisão e monitoramento científico, não substituindo laudos taxonômicos oficiais em contextos regulatórios.

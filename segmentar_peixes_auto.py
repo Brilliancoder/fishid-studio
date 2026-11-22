@@ -37,22 +37,36 @@ from tqdm import tqdm
 # =============================================================================
 # Configurações padrão (funcionam via terminal OU colando direto numa célula do Colab!)
 # =============================================================================
-DEFAULT_SPLITS_DIR: str = os.getenv("FISHID_SPLITS_DIR", "./data/splits")
-DEFAULT_OUT_DIR: str = os.getenv("FISHID_SEG_OUT_DIR", "./data/dataset_segmentado")
-DEFAULT_LIMIT: int | None = None      # Coloque 20 se quiser testar em 20 fotos por split primeiro
+DEFAULT_SPLITS_DIR: str = os.getenv(
+    "FISHID_SPLITS_DIR",
+    "/content/drive/MyDrive/modelos_peixes/fonte_verdade_experimentos/run_20261011_165821",
+)
+DEFAULT_OUT_DIR: str = os.getenv(
+    "FISHID_SEG_OUT_DIR",
+    "/content/drive/MyDrive/modelos_peixes/dataset_segmentado",
+)
+DEFAULT_LIMIT: int | None = None      # None = dataset completo (~6.220 fotos); coloque 20 só para teste rápido
 DEFAULT_USE_SAM: bool = True          # Mude para False se quiser apenas os recortes ultrarrápidos (sem máscara)
 DEFAULT_BATCH_SIZE: int = 16          # Lote de imagens por chamada do YOLO-World na GPU
 DEFAULT_MAX_INFER_SIDE: int = 1280    # Reduz fotos 4K/12MP apenas na inferência (recorte final mantém resolução original)
 DEFAULT_IO_WORKERS: int = 8           # Threads paralelas para leitura/escrita
 
-# Classes textuais open-vocabulary otimizadas para grandes peixes migratórios
+# Classes textuais open-vocabulary otimizadas para grandes peixes migratórios (alto recall em fotos de campo)
 FISH_PROMPTS: list[str] = [
     "fish",
-    "marlin",
-    "billfish",
-    "swordfish",
+    "large fish",
+    "ocean fish",
     "tuna",
+    "marlin",
+    "sailfish",
+    "swordfish",
+    "billfish",
+    "mahi mahi",
+    "dolphin fish",
     "shark",
+    "dead fish",
+    "caught fish",
+    "seafood",
 ]
 
 
@@ -76,18 +90,30 @@ def _clamp_box_with_margin(
     return nx1, ny1, max(nx1 + 1, nx2), max(ny1 + 1, ny2)
 
 
-def _select_best_box(boxes_xyxy: np.ndarray, confs: np.ndarray, img_area: float) -> tuple[np.ndarray, float]:
-    """Escolhe o peixe principal ponderando confiança e área relativa (evita ruídos minúsculos)."""
-    best_idx = 0
+def _select_best_box(
+    boxes_xyxy: np.ndarray,
+    confs: np.ndarray,
+    img_area: float,
+    min_primary_area_frac: float = 0.04,
+) -> tuple[np.ndarray, float, float]:
+    """Escolhe o peixe principal ponderando confiança e área relativa (ignora placas/ruídos minúsculos)."""
+    areas_frac = [
+        min(1.0, max(1.0, float((b[2] - b[0]) * (b[3] - b[1]))) / max(img_area, 1.0))
+        for b in boxes_xyxy
+    ]
+    # Se houver pelo menos uma detecção razoável (>= 4% da imagem), descarta micro-caixas do fundo
+    valid_idxs = [i for i, af in enumerate(areas_frac) if af >= min_primary_area_frac]
+    candidate_idxs = valid_idxs if valid_idxs else list(range(len(boxes_xyxy)))
+
+    best_idx = candidate_idxs[0]
     best_score = -1.0
-    for idx, (box, conf) in enumerate(zip(boxes_xyxy, confs)):
-        area = max(1.0, float((box[2] - box[0]) * (box[3] - box[1])))
-        area_frac = min(1.0, area / max(img_area, 1.0))
-        score = float(conf) * (0.65 + 0.35 * np.sqrt(area_frac))
+    for idx in candidate_idxs:
+        af = areas_frac[idx]
+        score = float(confs[idx]) * (0.45 + 0.55 * np.sqrt(af))
         if score > best_score:
             best_score = score
             best_idx = idx
-    return boxes_xyxy[best_idx], float(confs[best_idx])
+    return boxes_xyxy[best_idx], float(confs[best_idx]), float(areas_frac[best_idx])
 
 
 def _mask_to_clean_bbox(mask_u8: np.ndarray) -> tuple[int, int, int, int] | None:
@@ -204,6 +230,7 @@ def run_segmentation(
         print(f"Staging SSD local ativado: {staging_root} -> sincronização paralela para {out_dir}")
 
     review_rows: list[dict] = []
+    splits_processed = 0
     t_global = time.perf_counter()
 
     with ThreadPoolExecutor(max_workers=io_workers) as io_pool:
@@ -212,6 +239,7 @@ def run_segmentation(
             if not csv_path.is_file():
                 print(f"[AVISO] Split não encontrado, pulando: {csv_path}")
                 continue
+            splits_processed += 1
 
             df = pd.read_csv(csv_path)
             if limit is not None:
@@ -330,6 +358,17 @@ def run_segmentation(
                     inf_area = float(inf_w * inf_h)
                     boxes = det_res.boxes
 
+                    # Passada 2 (resgate em alta resolução 960px / FP32 / conf 0.025) para casos difíceis
+                    if boxes is None or len(boxes) == 0:
+                        rescue_res = detector.predict(
+                            infer_bgr,
+                            conf=min(0.025, conf_thresh),
+                            imgsz=960,
+                            device=device,
+                            verbose=False,
+                        )[0]
+                        boxes = rescue_res.boxes
+
                     if boxes is None or len(boxes) == 0:
                         pending_writes.append(
                             io_pool.submit(
@@ -362,19 +401,49 @@ def run_segmentation(
 
                     boxes_xyxy = boxes.xyxy.cpu().numpy()
                     confs = boxes.conf.cpu().numpy()
-                    best_box_inf, best_conf = _select_best_box(boxes_xyxy, confs, inf_area)
+                    best_box_inf, best_conf, best_area_frac = _select_best_box(boxes_xyxy, confs, inf_area)
+
+                    # Rejeita micro-detecções (< 2,5% da foto, ex.: placa/desenho de peixe na parede)
+                    if best_area_frac < 0.025:
+                        pending_writes.append(
+                            io_pool.submit(
+                                _write_image_task,
+                                (item["stage_crop"], img_bgr, [int(cv2.IMWRITE_JPEG_QUALITY), 92]),
+                            )
+                        )
+                        review_rows.append(
+                            {
+                                "split": split_name,
+                                "path": str(item["src_path"]),
+                                "species": item["species"],
+                                "motivo": "deteccao_muito_pequena_fallback",
+                                "confianca": round(best_conf, 4),
+                                "area_mascara_pct": round(best_area_frac * 100.0, 2),
+                            }
+                        )
+                        new_rows.append(
+                            {
+                                "path": str(item["final_crop"]),
+                                "original_path": str(item["src_path"]),
+                                "mask_path": "",
+                                "species": item["species"],
+                                "label": item["label"],
+                                "status": "fallback_full",
+                            }
+                        )
+                        pbar.update(1)
+                        continue
 
                     mask_area_pct = 0.0
                     mask_saved = False
                     final_box_inf = best_box_inf
 
-                    # 3) SAM 2 na imagem redimensionada (até 4x mais rápido que em 12MP!) + FP16
+                    # 3) SAM 2 na imagem redimensionada (até 4x mais rápido que em 12MP!)
                     if sam_model is not None:
                         sam_res = sam_model.predict(
                             infer_bgr,
                             bboxes=[best_box_inf.tolist()],
                             device=device,
-                            half=use_half,
                             verbose=False,
                         )[0]
                         if sam_res.masks is not None and len(sam_res.masks.data) > 0:
@@ -392,7 +461,16 @@ def run_segmentation(
                             mask_area_pct = round(100.0 * float(np.count_nonzero(mask_u8)) / max(inf_area, 1.0), 2)
                             tight = _mask_to_clean_bbox(mask_u8)
                             if tight is not None:
-                                final_box_inf = np.array(tight, dtype=np.float32)
+                                # UNIÃO da caixa YOLO + máscara SAM 2: preserva bico/rostro fino e nadadeiras longas
+                                final_box_inf = np.array(
+                                    [
+                                        min(float(best_box_inf[0]), float(tight[0])),
+                                        min(float(best_box_inf[1]), float(tight[1])),
+                                        max(float(best_box_inf[2]), float(tight[2])),
+                                        max(float(best_box_inf[3]), float(tight[3])),
+                                    ],
+                                    dtype=np.float32,
+                                )
 
                     # Reprojeta a caixa para a resolução ORIGINAL e recorta sem perda de qualidade
                     inv_scale = 1.0 / scale
@@ -479,6 +557,13 @@ def run_segmentation(
             pd.DataFrame(new_rows).to_csv(out_csv, index=False)
             print(f"Split salvo: {out_csv} ({len(new_rows)} imagens)")
 
+    if splits_processed == 0:
+        raise FileNotFoundError(
+            f"Nenhum arquivo split_train.csv / split_validation.csv / split_test.csv encontrado em: {splits_dir}\n"
+            "Passe o caminho correto do seu Google Drive em --splits-dir (ou edite DEFAULT_SPLITS_DIR) "
+            "e salve a saída no Drive em --out-dir (ou DEFAULT_OUT_DIR)."
+        )
+
     review_csv = out_dir / "revisao_manual.csv"
     pd.DataFrame(review_rows).to_csv(review_csv, index=False)
     elapsed_min = (time.perf_counter() - t_global) / 60.0
@@ -491,11 +576,11 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--splits-dir", type=Path, default=Path(DEFAULT_SPLITS_DIR), help="Pasta com split_train/validation/test.csv")
     parser.add_argument("--out-dir", type=Path, default=Path(DEFAULT_OUT_DIR), help="Pasta de saída para crops, masks e CSVs")
-    parser.add_argument("--yolo-weights", type=str, default="yolov8m-worldv2.pt", help="Peso do YOLO-World (s/m/l)")
+    parser.add_argument("--yolo-weights", type=str, default="yolov8l-worldv2.pt", help="Peso do YOLO-World (s/m/l/x)")
     parser.add_argument("--sam-weights", type=str, default="sam2.1_t.pt", help="Peso do SAM 2 (sam2.1_t.pt = 3x mais rápido)")
-    parser.add_argument("--conf", type=float, default=0.18, help="Limiar mínimo de detecção do YOLO-World")
-    parser.add_argument("--review-thresh", type=float, default=0.45, help="Abaixo disso envia para revisao_manual.csv")
-    parser.add_argument("--margin", type=float, default=0.12, help="Margem extra ao redor do peixe (0.12 = 12%)")
+    parser.add_argument("--conf", type=float, default=0.08, help="Limiar mínimo de detecção do YOLO-World (passada 1)")
+    parser.add_argument("--review-thresh", type=float, default=0.25, help="Abaixo disso envia para revisao_manual.csv")
+    parser.add_argument("--margin", type=float, default=0.15, help="Margem extra ao redor do peixe (0.15 = 15%)")
     parser.add_argument("--batch-size", type=int, default=DEFAULT_BATCH_SIZE, help="Imagens por lote no YOLO-World")
     parser.add_argument("--max-infer-side", type=int, default=DEFAULT_MAX_INFER_SIDE, help="Lado máximo na inferência (0 = original)")
     parser.add_argument("--io-workers", type=int, default=DEFAULT_IO_WORKERS, help="Threads paralelas de leitura/escrita")

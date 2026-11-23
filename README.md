@@ -22,6 +22,7 @@
   <img src="https://img.shields.io/badge/Frontend-Streamlit_+_PixiJS_v8-0F766E?style=for-the-badge&logo=streamlit&logoColor=white" alt="Streamlit + PixiJS v8"/>
   <img src="https://img.shields.io/badge/Backend-FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white" alt="FastAPI"/>
   <img src="https://img.shields.io/badge/ONU_ODS_14-Vida_na_%C3%81gua-0A97D9?style=for-the-badge" alt="ODS 14 Vida na Água"/>
+  <a href="https://github.com/viniciusscience/fishid-studio/actions/workflows/ci.yml"><img src="https://github.com/viniciusscience/fishid-studio/actions/workflows/ci.yml/badge.svg" alt="CI Status"/></a>
   <img src="https://img.shields.io/badge/License-MIT-062135?style=for-the-badge" alt="Licença MIT"/>
 </p>
 

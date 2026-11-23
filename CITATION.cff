@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+title: "FishID Studio: Deep Learning & Electronic Monitoring for Marine Pelagic Fish"
+message: "Se este software ou pipeline auxiliar sua pesquisa, por favor cite-o conforme os metadados abaixo."
+type: software
+authors:
+  - family-names: "da Silva de Souza"
+    given-names: "José Vinícius"
+    affiliation: "Universidade do Vale do Itajaí (UNIVALI) — LEMA"
+  - family-names: "Sant'Ana"
+    given-names: "Rodrigo"
+    affiliation: "Universidade do Vale do Itajaí (UNIVALI) — LEMA"
+repository-code: "https://github.com/viniciusscience/fishid-studio"
+license: MIT
+keywords:
+  - computer-vision
+  - deep-learning
+  - electronic-monitoring
+  - fisheries
+  - marine-biology
+  - fish-identification
+  - morphometry
+  - sdg14
+year: 2026

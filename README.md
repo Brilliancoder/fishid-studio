@@ -31,6 +31,16 @@
 
 ---
 
+## 🐟 Classificação Automática de Espécies em Tempo Real
+
+Identificação inteligente de **10 grandes espécies pelágicas migratórias** (atuns, agulhões, espadarte e dourado-do-mar) com nome popular, nome científico, grupo taxonômico e ranking Top-3 de probabilidades:
+
+<p align="center">
+  <img src="docs/fishid_classificacao_demo.gif" alt="FishID Studio — Demonstração de Classificação de Espécies (UNIVALI · LEMA)" width="92%"/>
+</p>
+
+---
+
 ## 🎬 Demonstração Real — Monitoramento Eletrônico & Biometria no Convés
 
 Análise automatizada de vídeos reais de embarcações pesqueiras (**Monitoramento Eletrônico — EM**), realizando **contagem consolidada de indivíduos**, **medição de comprimento ponta a ponta acompanhando a curvatura do corpo**, **margem de erro estimada (±%)** e **calibração interativa `px ↔ cm`**:
@@ -135,6 +145,7 @@ projeto-mestrado/
 │
 ├── docs/
 │   ├── fishid_aquarium_banner.gif         # Banner animado do aquário para apresentação
+│   ├── fishid_classificacao_demo.gif      # GIF animado de classificação de espécies (UNIVALI · LEMA)
 │   ├── fishid_em_demo.gif                 # GIF demo real de Monitoramento Eletrônico (UNIVALI · LEMA)
 │   ├── em_biometria_destaque_1.jpg        # Card de auditoria de biometria (recolhimento diurno)
 │   └── em_biometria_destaque_2.jpg        # Card de auditoria de biometria (recolhimento noturno)

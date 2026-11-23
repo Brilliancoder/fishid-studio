@@ -1,0 +1,38 @@
+name: Bug Report
+description: Report a bug in FishID Studio (UI, FastAPI backend, or EM pipeline)
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Clear description of the bug and expected behavior.
+    validations:
+      required: true
+  - type: dropdown
+    id: component
+    attributes:
+      label: Affected component
+      options:
+        - Frontend (Streamlit / PixiJS)
+        - Backend (FastAPI / Storage)
+        - Electronic Monitoring Pipeline (monitoramento_em.py)
+        - Segmentation / Tracking scripts
+        - Docker / Setup
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. ...
+        2. ...
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      placeholder: OS, Python/Docker version, GPU (if applicable)

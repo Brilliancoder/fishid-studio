@@ -1,0 +1,17 @@
+name: Feature Request / New Species
+description: Suggest a new feature, marine species, or pipeline enhancement
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Proposal
+      description: Describe the feature, species (with scientific name if applicable), or improvement you would like to see.
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Research / Use-case context
+      description: How would this help your research, fisheries monitoring, or workflow?

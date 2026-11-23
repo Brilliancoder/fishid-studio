@@ -5,6 +5,10 @@
 <h1 align="center">🐟 FishID Studio</h1>
 
 <p align="center">
+  🇧🇷 <strong>Português</strong> &nbsp;·&nbsp; 🇺🇸 <a href="README.en.md">English</a>
+</p>
+
+<p align="center">
   <img src="frontend/assets/logos/univali_logo.png" alt="UNIVALI — Universidade do Vale do Itajaí" height="64" />
   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
   <img src="frontend/assets/logos/lema_logo.png" alt="LEMA — Laboratório de Estudos Marinhos Aplicados" height="58" />

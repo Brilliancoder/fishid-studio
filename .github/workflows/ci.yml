@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  syntax-and-structure:
+    name: Python Syntax & Repo Hygiene
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Check Python syntax across all scripts and services
+        run: |
+          python -m py_compile \
+            backend/main.py \
+            backend/storage.py \
+            frontend/app.py \
+            monitoramento_em.py \
+            rodar_suite_benchmark.py \
+            rastrear_peixes_auto.py \
+            segmentar_peixes_auto.py
+
+      - name: Verify required project files exist
+        run: |
+          test -f README.md
+          test -f LICENSE
+          test -f .env.example
+          test -f docker-compose.yml
+          test -f backend/Dockerfile
+          test -f frontend/Dockerfile

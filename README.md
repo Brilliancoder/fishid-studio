@@ -23,6 +23,7 @@
   <img src="https://img.shields.io/badge/Backend-FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white" alt="FastAPI"/>
   <img src="https://img.shields.io/badge/ONU_ODS_14-Vida_na_%C3%81gua-0A97D9?style=for-the-badge" alt="ODS 14 Vida na Água"/>
   <a href="https://github.com/viniciusscience/fishid-studio/actions/workflows/ci.yml"><img src="https://github.com/viniciusscience/fishid-studio/actions/workflows/ci.yml/badge.svg" alt="CI Status"/></a>
+  <a href="https://doi.org/10.5281/zenodo.24451918"><img src="https://zenodo.org/badge/1467922496.svg" alt="DOI"/></a>
   <img src="https://img.shields.io/badge/License-MIT-062135?style=for-the-badge" alt="Licença MIT"/>
 </p>
 
@@ -180,12 +181,15 @@ O **FishID Studio** é um projeto acadêmico **100% aberto e gratuito**. Se a fe
 ## 📖 Como Citar e Referências
 
 ```bibtex
-@misc{souza2026fishidstudio,
+@software{souza2026fishidstudio,
   author       = {José Vinícius da Silva de Souza and Rodrigo Sant'Ana},
-  title        = {FishID Studio: Modelo Deep Learning para Identificação de Espécies de Peixes Marinhos},
+  title        = {FishID Studio: Deep Learning e Monitoramento Eletrônico para Identificação e Biometria de Peixes Marinhos},
   year         = {2026},
-  institution  = {Universidade do Vale do Itajaí (UNIVALI) — Laboratório de Estudos Marinhos Aplicados (LEMA)},
-  note         = {Projeto Open Source de Pesquisa de Mestrado em Computação Aplicada}
+  version      = {v1.0.0},
+  publisher    = {Zenodo},
+  doi          = {10.5281/zenodo.24451918},
+  url          = {https://doi.org/10.5281/zenodo.24451918},
+  institution  = {Universidade do Vale do Itajaí (UNIVALI) — Laboratório de Estudos Marinhos Aplicados (LEMA)}
 }
 ```
 

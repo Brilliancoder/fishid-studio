@@ -13,7 +13,7 @@
 <p align="center">
   <strong>Pesquisa de Mestrado em Computação Aplicada · UNIVALI · LEMA (Laboratório de Estudos Marinhos Aplicados)</strong><br/>
   Modelo Deep Learning para Identificação de Espécies de Peixes Marinhos<br/>
-  <strong>Autor:</strong> <a href="https://github.com/viniciusscience"><strong>José Vinícius da Silva de Souza</strong></a> &nbsp;·&nbsp; <strong>Coautor e Orientador:</strong> <strong>Prof. Dr. Rodrigo Sant'Ana</strong>
+  <strong>Autor:</strong> <a href="https://github.com/viniciusscience"><strong>José Vinícius da Silva de Souza</strong></a> &nbsp;·&nbsp; <strong>Coautor e Orientador:</strong> <a href="https://github.com/rodrigosantana"><strong>Prof. Dr. Rodrigo Sant'Ana</strong></a>
 </p>
 
 <p align="center">

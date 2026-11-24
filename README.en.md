@@ -28,7 +28,7 @@
   <img src="https://img.shields.io/badge/UN_SDG_14-Life_Below_Water-0A97D9?style=for-the-badge" alt="UN SDG 14 Life Below Water"/>
   <a href="https://github.com/viniciusscience/fishid-studio/actions/workflows/ci.yml"><img src="https://github.com/viniciusscience/fishid-studio/actions/workflows/ci.yml/badge.svg" alt="CI Status"/></a>
   <a href="https://doi.org/10.5281/zenodo.24451918"><img src="https://zenodo.org/badge/1467922496.svg" alt="DOI"/></a>
-  <img src="https://img.shields.io/badge/License-MIT-062135?style=for-the-badge" alt="MIT License"/>
+  <img src="https://img.shields.io/badge/License-MIT-062135?style=for-the-badge" alt="MIT License"/>`n  <a href="https://github.com/sponsors/viniciusscience"><img src="https://img.shields.io/badge/Sponsor-EA4AAA?style=for-the-badge&logo=githubsponsors&logoColor=white" alt="GitHub Sponsors"/></a>
 </p>
 
 **FishID Studio** is an open-source computer vision platform for **automated identification, counting, and curved-body biometrics of large migratory pelagic fish** from photos, mobile cameras, and onboard fishing vessel videos. Born as a Master's thesis in Applied Computing at **UNIVALI / LEMA**, it combines scientific rigor (*ConvNeXt-Tiny*, *Grad-CAM* explainability, *YOLO-World + SAM 2.1* auto-segmentation, and *ByteTrack* multi-object tracking) with a responsive **PixiJS v8 WebGL** interface designed for researchers, fisheries electronic monitoring (EM), and citizen science.

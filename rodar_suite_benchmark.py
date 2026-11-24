@@ -76,16 +76,31 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Suíte controlada de 10 experimentos de Monitoramento Eletrônico.")
     parser.add_argument("--video", type=str, default=DEFAULT_VIDEO, help="Caminho do vídeo MP4/MOV (ou env FISHID_EM_VIDEO)")
     parser.add_argument("--report-only", action="store_true", help="Apenas regenera a tabela comparativa a partir do índice")
+    parser.add_argument("--list", action="store_true", help="Lista os experimentos disponíveis e sai")
+    parser.add_argument("--only", nargs="+", default=None, help="Executa apenas os experimentos com as tags especificadas")
     args = parser.parse_args()
+
+    if args.list:
+        for tag, desc, _ in EXPERIMENTS:
+            print(f"{tag}: {desc}")
+        return
+
+    selected = EXPERIMENTS
+    if args.only:
+        only_set = set(args.only)
+        selected = [e for e in EXPERIMENTS if e[0] in only_set]
+        if not selected:
+            print(f"Nenhum experimento encontrado para --only {args.only}")
+            return
 
     video_arg = args.video
     report_only = args.report_only
     results_summary = []
 
     if not report_only:
-        print(f"Iniciando suite de {len(EXPERIMENTS)} experimentos controlados...\n")
-        for i, (tag, desc, extra_args) in enumerate(EXPERIMENTS, start=1):
-            print(f"\n==================== [{i}/{len(EXPERIMENTS)}] {tag} ====================")
+        print(f"Iniciando suite de {len(selected)} experimentos controlados...\n")
+        for i, (tag, desc, extra_args) in enumerate(selected, start=1):
+            print(f"\n==================== [{i}/{len(selected)}] {tag} ====================")
             print(f"Objetivo: {desc}")
             cmd = [PY, SCRIPT, "--video", video_arg, "--tag", tag, *extra_args]
             proc = subprocess.run(cmd, check=False)

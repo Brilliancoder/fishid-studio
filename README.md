@@ -190,7 +190,35 @@ docker compose up --build
 
 ## ☕ Apoie a Pesquisa Científica
 
-O **FishID Studio** é um projeto acadêmico **100% aberto e gratuito**. Se a ferramenta auxiliou sua pesquisa, empresa ou iniciativa de conservação marinha, considere apoiar o desenvolvimento contínuo pelo botão **☕ Apoie a Pesquisa** no topo da interface — cada incentivo fortalece a ciência aberta brasileira!
+O **FishID Studio** é um projeto acadêmico **100% aberto e gratuito**. Se a ferramenta auxiliou sua pesquisa, empresa ou iniciativa de conservação marinha:
+- ⭐ **Deixe uma Star no GitHub** para aumentar a visibilidade da pesquisa aberta no Brasil!
+- ☕ Considere apoiar o desenvolvimento contínuo pelo botão **Apoie a Pesquisa** no topo da interface ou via [GitHub Sponsors](https://github.com/sponsors/viniciusscience).
+
+---
+
+## 🤝 Contribuidores da Comunidade
+
+Agradecemos a todos os pesquisadores e desenvolvedores que contribuem com código, testes e melhorias no **FishID Studio**:
+
+<p align="center">
+  <a href="https://github.com/viniciusscience/fishid-studio/graphs/contributors">
+    <img src="https://contrib.rocks/image?repo=viniciusscience/fishid-studio" alt="Contribuidores do FishID Studio" />
+  </a>
+</p>
+
+---
+
+## 📈 Evolução da Comunidade (Star History)
+
+<p align="center">
+  <a href="https://star-history.com/#viniciusscience/fishid-studio&Date">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=viniciusscience/fishid-studio&type=Date&theme=dark" />
+      <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=viniciusscience/fishid-studio&type=Date" />
+      <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=viniciusscience/fishid-studio&type=Date" width="85%" />
+    </picture>
+  </a>
+</p>
 
 ---
 

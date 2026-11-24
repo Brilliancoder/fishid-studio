@@ -186,6 +186,28 @@ docker compose up --build
 
 Questions about datasets, `px ↔ cm` calibration, or adding new species? Start a thread in [GitHub Discussions](https://github.com/viniciusscience/fishid-studio/discussions) or read [CONTRIBUTING.md](CONTRIBUTING.md).
 
+If **FishID Studio** helps your research or computer vision workflow, please consider giving the repository a ⭐ **Star on GitHub**!
+
+<p align="center">
+  <a href="https://github.com/viniciusscience/fishid-studio/graphs/contributors">
+    <img src="https://contrib.rocks/image?repo=viniciusscience/fishid-studio" alt="FishID Studio Contributors" />
+  </a>
+</p>
+
+---
+
+## 📈 Star History
+
+<p align="center">
+  <a href="https://star-history.com/#viniciusscience/fishid-studio&Date">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=viniciusscience/fishid-studio&type=Date&theme=dark" />
+      <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=viniciusscience/fishid-studio&type=Date" />
+      <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=viniciusscience/fishid-studio&type=Date" width="85%" />
+    </picture>
+  </a>
+</p>
+
 ---
 
 ## 📖 Citation & References

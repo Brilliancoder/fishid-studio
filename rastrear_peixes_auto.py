@@ -251,7 +251,7 @@ def run_tracking(
         print(f"Auto-labels YOLO salvos em: {labels_dir}")
 
 
-def parse_args() -> argparse.Namespace:
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Rastreamento automático (ByteTrack) + Auto-Labeling YOLO para vídeos de peixes."
     )
@@ -262,7 +262,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--conf", type=float, default=0.22, help="Confiança mínima de detecção")
     parser.add_argument("--no-labels", action="store_true", help="Não salvar auto-labels YOLO")
     parser.add_argument("--max-frames", type=int, default=None, help="Limita número de frames para teste rápido")
-    args, _ = parser.parse_known_args()
+    args, _ = parser.parse_known_args(argv)
     return args
 
 

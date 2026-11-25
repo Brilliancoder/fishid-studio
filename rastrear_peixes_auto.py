@@ -9,10 +9,12 @@ O que este script gera automaticamente em `--out-dir`:
   2. trajetorias.csv              -> Posição (x, y), dimensões em pixels e ID de cada peixe frame a frame
   3. resumo_individuos.csv        -> Contagem única de peixes detectados, tempo em cena e espécie prevista
   4. labels_yolo/frame_XXXXXX.txt -> Anotações automáticas no formato YOLO (prontas para Roboflow/CVAT)
+  5. labels_yolo/classes.txt e data.yaml -> Nomes de classe e config do dataset YOLO
 """
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import subprocess
 from collections import defaultdict, deque
@@ -53,6 +55,20 @@ def _color_for_id(track_id: int) -> tuple[int, int, int]:
     return PALETTE_BGR[int(track_id) % len(PALETTE_BGR)]
 
 
+def _write_yolo_dataset_meta(out_dir: Path, labels_dir: Path) -> None:
+    """Gera labels_yolo/classes.txt e <out_dir>/data.yaml (todas as anotações usam a classe 0 = peixe)."""
+    (labels_dir / "classes.txt").write_text("fish\n", encoding="utf-8")
+    (out_dir / "data.yaml").write_text(
+        f"path: {json.dumps(out_dir.resolve().as_posix())}\n"  # string JSON = YAML válido mesmo com ':' ou '#'
+        "train: frames_autolabel\n"
+        "val: frames_autolabel\n"
+        "nc: 1\n"
+        "names:\n"
+        "  0: fish\n",
+        encoding="utf-8",
+    )
+
+
 def run_tracking(
     video_path: Path,
     out_dir: Path,
@@ -76,6 +92,7 @@ def run_tracking(
     if save_yolo_labels:
         labels_dir.mkdir(parents=True, exist_ok=True)
         frames_dir.mkdir(parents=True, exist_ok=True)
+        _write_yolo_dataset_meta(out_dir, labels_dir)
 
     print(f"Carregando detector open-vocabulary: {yolo_weights}")
     model = YOLO(yolo_weights)
@@ -251,7 +268,7 @@ def run_tracking(
         print(f"Auto-labels YOLO salvos em: {labels_dir}")
 
 
-def parse_args() -> argparse.Namespace:
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Rastreamento automático (ByteTrack) + Auto-Labeling YOLO para vídeos de peixes."
     )
@@ -262,7 +279,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--conf", type=float, default=0.22, help="Confiança mínima de detecção")
     parser.add_argument("--no-labels", action="store_true", help="Não salvar auto-labels YOLO")
     parser.add_argument("--max-frames", type=int, default=None, help="Limita número de frames para teste rápido")
-    args, _ = parser.parse_known_args()
+    args, _ = parser.parse_known_args(argv)
     return args
 
 

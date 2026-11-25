@@ -1,0 +1,14 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 💖 Sponsor Open Marine Science (GitHub Sponsors)
+    url: https://github.com/sponsors/viniciusscience
+    about: Support FishID Studio development, get priority roadmap requests, or fund an issue bounty!
+  - name: 🏢 Enterprise Consulting, Custom Species Fine-Tuning & Vessel EM Deployment
+    url: https://www.linkedin.com/in/viniciecomp/
+    about: Contact us for commercial Electronic Monitoring (EM) deployments, custom species training, or R&D partnerships.
+  - name: 💬 Community Q&A & Scientific Discussions
+    url: https://github.com/viniciusscience/fishid-studio/discussions
+    about: Ask questions about datasets, px <-> cm calibration, SAM 2 + ByteTrack, or academic citations.
+  - name: ⭐ Star FishID Studio on GitHub
+    url: https://github.com/viniciusscience/fishid-studio
+    about: Help boost open-source marine conservation research (UN SDG 14) by starring the repository!

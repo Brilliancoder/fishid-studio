@@ -570,7 +570,7 @@ def run_segmentation(
     print(f"\nConcluído em {elapsed_min:.1f} min! Casos para revisão manual: {len(review_rows)} -> {review_csv}")
 
 
-def parse_args() -> argparse.Namespace:
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Auto-segmentação turbo de peixes (YOLO-World + SAM 2) com batch FP16 e staging local."
     )
@@ -588,7 +588,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--no-staging", action="store_true", help="Escreve direto em --out-dir sem SSD local")
     parser.add_argument("--limit", type=int, default=DEFAULT_LIMIT, help="Limita quantidade por split para teste rápido")
     # parse_known_args() ignora argumentos internos do kernel do Google Colab (-f kernel.json)
-    args, _ = parser.parse_known_args()
+    args, _ = parser.parse_known_args(argv)
     return args
 
 

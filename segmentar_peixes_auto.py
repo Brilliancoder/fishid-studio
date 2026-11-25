@@ -116,6 +116,21 @@ def _select_best_box(
     return boxes_xyxy[best_idx], float(confs[best_idx]), float(areas_frac[best_idx])
 
 
+def merge_yolo_and_sam_bbox(
+    yolo_box: np.ndarray | tuple,
+    sam_bbox: tuple[int, int, int, int] | None,
+) -> np.ndarray:
+    """Return the float32 box covering the detection and, if present, the mask."""
+    if sam_bbox is None:
+        return np.asarray(yolo_box, dtype=np.float32)
+    x0, y0, x1, y1 = yolo_box
+    sx0, sy0, sx1, sy1 = sam_bbox
+    return np.array(
+        [min(x0, sx0), min(y0, sy0), max(x1, sx1), max(y1, sy1)],
+        dtype=np.float32,
+    )
+
+
 def _mask_to_clean_bbox(mask_u8: np.ndarray) -> tuple[int, int, int, int] | None:
     ys, xs = np.where(mask_u8 > 0)
     if len(xs) == 0 or len(ys) == 0:
@@ -479,17 +494,8 @@ def run_segmentation(
                             mask_saved = True
                             mask_area_pct = round(100.0 * float(np.count_nonzero(mask_u8)) / max(inf_area, 1.0), 2)
                             tight = _mask_to_clean_bbox(mask_u8)
-                            if tight is not None:
-                                # UNIÃO da caixa YOLO + máscara SAM 2: preserva bico/rostro fino e nadadeiras longas
-                                final_box_inf = np.array(
-                                    [
-                                        min(float(best_box_inf[0]), float(tight[0])),
-                                        min(float(best_box_inf[1]), float(tight[1])),
-                                        max(float(best_box_inf[2]), float(tight[2])),
-                                        max(float(best_box_inf[3]), float(tight[3])),
-                                    ],
-                                    dtype=np.float32,
-                                )
+                            # UNIÃO da caixa YOLO + máscara SAM 2: preserva bico/rostro fino e nadadeiras longas
+                            final_box_inf = merge_yolo_and_sam_bbox(best_box_inf, tight)
 
                     # Reprojeta a caixa para a resolução ORIGINAL e recorta sem perda de qualidade
                     inv_scale = 1.0 / scale

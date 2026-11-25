@@ -188,11 +188,18 @@ docker compose up --build
 
 ---
 
-## ☕ Apoie a Pesquisa Científica
+## ☕ Apoie a Pesquisa Científica & Consultoria / Parcerias (EM & Visão Computacional)
 
-O **FishID Studio** é um projeto acadêmico **100% aberto e gratuito**. Se a ferramenta auxiliou sua pesquisa, empresa ou iniciativa de conservação marinha:
-- ⭐ **Deixe uma Star no GitHub** para aumentar a visibilidade da pesquisa aberta no Brasil!
-- ☕ Considere apoiar o desenvolvimento contínuo pelo botão **Apoie a Pesquisa** no topo da interface ou via [GitHub Sponsors](https://github.com/sponsors/viniciusscience).
+O **FishID Studio** é um projeto acadêmico **100% aberto e gratuito (MIT)**. Se a ferramenta auxiliou sua pesquisa, empresa ou iniciativa de conservação marinha:
+- ⭐ **Deixe uma Star no GitHub** para aumentar a visibilidade da ciência aberta no Brasil!
+- 💖 **Torne-se um Patrocinador ([GitHub Sponsors](https://github.com/sponsors/viniciusscience))** ou use o botão **☕ Apoie a Pesquisa** no topo da interface web (Pix / Internacional) — patrocinadores têm destaque oficial no README e prioridade no roadmap!
+
+### 🏢 Soluções Customizadas, P&D e Implantação Industrial (Enterprise & Pesqueira)
+Precisa adaptar o pipeline do **FishID Studio** para a sua operação pesqueira, órgão ambiental, consultoria oceanográfica ou frota de embarcações? Oferecemos suporte especializado e consultoria técnica para:
+- 🎯 **Fine-Tuning Customizado (Novas Espécies & Regiões):** Treinamento de modelos `ConvNeXt` / `YOLO-World` / `SAM 2.1` para espécies costeiras, continentais ou demersais específicas da sua região.
+- 🚢 **Implantação de Monitoramento Eletrônico (EM) On-Premise / Edge GPU:** Calibração de câmeras de convés (`px ↔ cm`), integração com sistemas de bordo, auditoria automatizada de desembarque e relatórios regulatórios.
+- 🔌 **Integração via API & Cloud (`AWS S3` / `GCS` / `FastAPI`):** Arquitetura escalável para processamento em lote de vídeos de viagens pesqueiras.
+- 📬 **Contato comercial / parcerias de P&D:** [LinkedIn — José Vinícius](https://www.linkedin.com/in/viniciecomp/) · [GitHub Discussions](https://github.com/viniciusscience/fishid-studio/discussions) · [GitHub Sponsors](https://github.com/sponsors/viniciusscience)
 
 ---
 

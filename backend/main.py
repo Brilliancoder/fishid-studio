@@ -5,13 +5,14 @@ import io
 import os
 import time
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 import cv2
 import numpy as np
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from PIL import Image
+from pydantic import BaseModel
 
 from storage import get_storage_config, save_contribution, validate_image_quality
 
@@ -255,7 +256,65 @@ def predict_rgb_array(
     }
 
 
-@app.get("/health")
+class HealthResponse(BaseModel):
+    status: Literal["ok"]
+
+
+class CatalogSpecies(BaseModel):
+    scientific: str
+    common_pt: str
+    group: str
+
+
+class ModelInfoResponse(BaseModel):
+    mode: Literal["demo", "real"]
+    status: str
+    load_error: str | None
+    model_path: str
+    input_size: list[int]
+    total_params: int | None
+    trainable_params: int | None
+    normalize_div_255: bool
+    preserve_aspect_ratio: bool
+    species_catalog: list[CatalogSpecies]
+    class_names: list[str]
+    storage_backend: str
+    storage_bucket: str
+
+
+class SpeciesProbability(BaseModel):
+    scientific: str
+    common_pt: str
+    species: str
+    probability: float
+
+
+class PredictionResponse(BaseModel):
+    mode: Literal["demo", "real"]
+    top_species: str
+    scientific_name: str
+    display_name: str
+    confidence: float
+    latency_ms: float
+    probabilities: list[SpeciesProbability]
+
+
+class ContributionResponse(BaseModel):
+    saved: bool
+    backend: str
+    sample_id: str
+    location: str
+
+
+# Document the success bodies independently of response serialization.
+@app.get(
+    "/health",
+    tags=["System"],
+    summary="Check API health",
+    description="Checks whether the API is responding.",
+    response_model=None,
+    responses={200: {"model": HealthResponse}},
+)
 def health() -> dict[str, str]:
     return {"status": "ok"}
 
@@ -274,7 +333,14 @@ def list_species(group: str | None = None, q: str | None = None) -> dict[str, An
     return {"count": len(species), "species": species}
 
 
-@app.get("/info")
+@app.get(
+    "/info",
+    tags=["Model"],
+    summary="Get model and catalog information",
+    description="Returns the current inference mode, model configuration, species catalog, and storage settings.",
+    response_model=None,
+    responses={200: {"model": ModelInfoResponse}},
+)
 def model_info() -> dict[str, Any]:
     bundle, err = get_model_state()
     storage_cfg = get_storage_config()
@@ -312,7 +378,14 @@ def model_info() -> dict[str, Any]:
     }
 
 
-@app.post("/predict")
+@app.post(
+    "/predict",
+    tags=["Inference"],
+    summary="Classify a fish image",
+    description="Accepts an image upload and returns the top species and ranked probabilities. Without a loaded model, the API returns a demonstration result.",
+    response_model=None,
+    responses={200: {"model": PredictionResponse}},
+)
 async def predict_endpoint(
     file: UploadFile = File(...),
     hint_species: str | None = Form(default=None),
@@ -329,7 +402,14 @@ async def predict_endpoint(
     return predict_rgb_array(np.asarray(pil_img), bundle, hint_species=hint_species)
 
 
-@app.post("/contribute")
+@app.post(
+    "/contribute",
+    tags=["Citizen Science"],
+    summary="Submit a research image",
+    description="Checks the uploaded image quality and saves the image and submission metadata to the configured storage backend.",
+    response_model=None,
+    responses={200: {"model": ContributionResponse}},
+)
 async def contribute_endpoint(
     file: UploadFile = File(...),
     predicted_scientific: str = Form(default=""),

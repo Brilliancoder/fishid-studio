@@ -24,11 +24,16 @@ from PIL import Image
 
 def validate_image_quality(pil_img: Image.Image) -> tuple[bool, str, dict[str, float]]:
     """Filtra fotos borradas, escuras, estouradas ou de baixa resolução antes de salvar no dataset."""
+    min_dim = int(os.getenv("FISHID_MIN_IMAGE_DIM", "224"))
+    min_sharpness = float(os.getenv("FISHID_MIN_SHARPNESS", "35.0"))
+    min_brightness = float(os.getenv("FISHID_MIN_BRIGHTNESS", "22.0"))
+    max_brightness = float(os.getenv("FISHID_MAX_BRIGHTNESS", "240.0"))
+    min_contrast = float(os.getenv("FISHID_MIN_CONTRAST", "14.0"))
     w, h = pil_img.size
-    if w < 224 or h < 224:
+    if w < min_dim or h < min_dim:
         return (
             False,
-            f"Imagem com resolução muito baixa ({w}×{h} px). Envie uma foto mais nítida (mínimo 224×224 px).",
+            f"Imagem com resolução muito baixa ({w}×{h} px). Envie uma foto mais nítida (mínimo {min_dim}×{min_dim} px).",
             {"width": float(w), "height": float(h)},
         )
 
@@ -42,19 +47,19 @@ def validate_image_quality(pil_img: Image.Image) -> tuple[bool, str, dict[str, f
         "contrast": round(contrast, 2),
     }
 
-    if sharpness < 35.0:
+    if sharpness < min_sharpness:
         return (
             False,
             "Foto muito borrada ou fora de foco. Tente tirar uma nova foto bem nítida do peixe.",
             metrics,
         )
-    if brightness < 22.0:
+    if brightness < min_brightness:
         return (
             False,
             "Foto escura demais para uso científico. Tente fotografar em um local mais iluminado.",
             metrics,
         )
-    if brightness > 240.0 or contrast < 14.0:
+    if brightness > max_brightness or contrast < min_contrast:
         return (
             False,
             "Foto sem contraste ou com excesso de luz. Ajuste o ângulo para evitar reflexo forte.",

@@ -58,6 +58,7 @@ jobs:
             pillow \
             numpy \
             pandas \
+            "streamlit>=1.40.0" \
             tqdm
 
       - name: Smoke-test backend API and core modules

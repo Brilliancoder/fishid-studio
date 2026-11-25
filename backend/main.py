@@ -260,6 +260,20 @@ def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
+@app.get("/species")
+def list_species(group: str | None = None, q: str | None = None) -> dict[str, Any]:
+    group_filter = group.casefold() if group is not None else None
+    query = (q or "").casefold()
+    species = []
+    for item in SPECIES_CATALOG:
+        if group_filter is not None and item["group"].casefold() != group_filter:
+            continue
+        if query not in item["scientific"].casefold() and query not in item["common_pt"].casefold():
+            continue
+        species.append({**item, "display_name": _display_name(item["scientific"])})
+    return {"count": len(species), "species": species}
+
+
 @app.get("/info")
 def model_info() -> dict[str, Any]:
     bundle, err = get_model_state()

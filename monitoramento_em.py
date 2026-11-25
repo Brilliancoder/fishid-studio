@@ -30,7 +30,6 @@ from pathlib import Path
 import cv2
 import numpy as np
 import pandas as pd
-import torch
 
 # =============================================================================
 # Classes open-vocabulary (otimizadas sem viés de "dolphin fish" em tubarões)
@@ -693,6 +692,7 @@ def render_hud_video(
 
 
 def run_experiment(args: argparse.Namespace) -> Path:
+    import torch
     from ultralytics import SAM, YOLO
 
     t0 = time.perf_counter()
@@ -1169,7 +1169,7 @@ def run_experiment(args: argparse.Namespace) -> Path:
     return run_dir
 
 
-def parse_args() -> argparse.Namespace:
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     p = argparse.ArgumentParser(description="FishID Studio — Pipeline v5 de Monitoramento Eletrônico (EM).")
     p.add_argument("--video", type=Path, required=True)
     p.add_argument("--tag", type=str, default="v5")
@@ -1195,7 +1195,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--fishid-api", type=str, default="", help="URL opcional da API FishID (ex.: http://localhost:8000)")
     p.add_argument("--save-video", action="store_true", help="Gera vídeo MP4 anotado com HUD inteligente")
     p.add_argument("--cpu", action="store_true")
-    return p.parse_args()
+    return p.parse_args(argv)
 
 
 if __name__ == "__main__":

@@ -177,6 +177,25 @@ def _sync_directory_parallel(src_root: Path, dst_root: Path, workers: int = 8) -
     return len(pairs)
 
 
+def identify_review_reasons(
+    best_conf: float,
+    num_boxes: int,
+    use_sam: bool,
+    mask_saved: bool,
+    mask_area_pct: float,
+    review_thresh: float = 0.25,
+) -> list[str]:
+    """Return the manual-review reasons in the order used by the review CSV."""
+    reasons = []
+    if best_conf < review_thresh:
+        reasons.append("baixa_confianca")
+    if num_boxes > 2:
+        reasons.append("multiplos_peixes")
+    if use_sam and mask_saved and (mask_area_pct < 3.0 or mask_area_pct > 92.0):
+        reasons.append("area_mascara_atipica")
+    return reasons
+
+
 def run_segmentation(
     splits_dir: Path,
     out_dir: Path,
@@ -491,13 +510,9 @@ def run_segmentation(
                         )
                     )
 
-                    motivos = []
-                    if best_conf < review_thresh:
-                        motivos.append("baixa_confianca")
-                    if len(boxes_xyxy) > 2:
-                        motivos.append("multiplos_peixes")
-                    if use_sam and mask_saved and (mask_area_pct < 3.0 or mask_area_pct > 92.0):
-                        motivos.append("area_mascara_atipica")
+                    motivos = identify_review_reasons(
+                        best_conf, len(boxes_xyxy), use_sam, mask_saved, mask_area_pct, review_thresh
+                    )
 
                     if motivos:
                         review_rows.append(

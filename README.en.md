@@ -182,11 +182,19 @@ docker compose up --build
 
 ---
 
-## 🤝 Contributing & Community
+## 🤝 Contributing, Sponsorship & Enterprise Consulting
 
 Questions about datasets, `px ↔ cm` calibration, or adding new species? Start a thread in [GitHub Discussions](https://github.com/viniciusscience/fishid-studio/discussions) or read [CONTRIBUTING.md](CONTRIBUTING.md).
 
-If **FishID Studio** helps your research or computer vision workflow, please consider giving the repository a ⭐ **Star on GitHub**!
+- ⭐ **Star the Repository:** If **FishID Studio** helps your research or computer vision workflow, please give it a ⭐ **Star on GitHub**!
+- 💖 **Sponsor Open Marine Science:** Support continuous development and model hosting via **[GitHub Sponsors](https://github.com/sponsors/viniciusscience)** — sponsors receive priority feature requests and recognition in the README!
+
+### 🏢 Custom R&D, Fine-Tuning & Fisheries Electronic Monitoring (EM) Consulting
+Looking to deploy **FishID Studio** in commercial fisheries, environmental agencies, vessel fleets, or marine conservation programs? We provide consulting, custom AI engineering, and R&D partnerships:
+- 🎯 **Custom Species Fine-Tuning:** Training and benchmarking `ConvNeXt`, `YOLO-World`, and `SAM 2.1` models on your regional fish catalogs or camera-trap datasets.
+- 🚢 **Vessel Electronic Monitoring (EM) & Edge Deployment:** Deck camera `px ↔ cm` calibration, anti-occlusion video tracking pipelines, automated catch biometry, and regulatory audit cards.
+- 🔌 **Production API & Cloud Integration (`FastAPI` / `Docker` / `S3` / `GCS`):** High-throughput video batch processing and citizen-science collection portals.
+- 📬 **Get in touch:** [LinkedIn — José Vinícius](https://www.linkedin.com/in/viniciecomp/) · [GitHub Discussions](https://github.com/viniciusscience/fishid-studio/discussions) · [GitHub Sponsors](https://github.com/sponsors/viniciusscience)
 
 <p align="center">
   <a href="https://github.com/viniciusscience/fishid-studio/graphs/contributors">

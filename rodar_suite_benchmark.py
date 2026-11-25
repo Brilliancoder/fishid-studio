@@ -8,6 +8,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import shlex
 import subprocess
 import sys
 from pathlib import Path
@@ -100,10 +101,17 @@ def _mean_error(run_dir: Path) -> float | None:
     return float(mean) if pd.notna(mean) else None
 
 
+def experiment_command(video: str, tag: str, extra_args: list[str]) -> list[str]:
+    return [PY, SCRIPT, "--video", video, "--tag", tag, *extra_args]
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Suíte controlada de 10 experimentos de Monitoramento Eletrônico.")
     parser.add_argument("--video", type=str, default=DEFAULT_VIDEO, help="Caminho do vídeo MP4/MOV (ou env FISHID_EM_VIDEO)")
-    parser.add_argument("--report-only", action="store_true", help="Apenas regenera a tabela comparativa a partir do índice")
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument("--dry-run", action="store_true",
+                      help="Imprime os comandos que seriam executados sem iniciar os experimentos")
+    mode.add_argument("--report-only", action="store_true", help="Apenas regenera a tabela comparativa a partir do índice")
     parser.add_argument("--json-out", type=Path, help="Salva também o comparativo em JSON no caminho indicado")
     parser.add_argument("--list", action="store_true", help="Lista os experimentos disponíveis e sai")
     parser.add_argument("--only", nargs="+", default=None, help="Executa apenas os experimentos com as tags especificadas")
@@ -123,6 +131,11 @@ def main() -> None:
             return
 
     video_arg = args.video
+    if args.dry_run:
+        for tag, _, extra_args in selected:
+            print(shlex.join(experiment_command(video_arg, tag, extra_args)))
+        return
+
     report_only = args.report_only
     results_summary = []
 
@@ -131,7 +144,7 @@ def main() -> None:
         for i, (tag, desc, extra_args) in enumerate(selected, start=1):
             print(f"\n==================== [{i}/{len(selected)}] {tag} ====================")
             print(f"Objetivo: {desc}")
-            cmd = [PY, SCRIPT, "--video", video_arg, "--tag", tag, *extra_args]
+            cmd = experiment_command(video_arg, tag, extra_args)
             proc = subprocess.run(cmd, check=False)
             status = "OK" if proc.returncode == 0 else f"ERRO({proc.returncode})"
             results_summary.append((tag, desc, status))

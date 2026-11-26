@@ -6,7 +6,9 @@ e gera o comparativo final em experimentos_em/comparativo_10_experimentos.md.
 from __future__ import annotations
 
 import argparse
+import json
 import os
+import shlex
 import subprocess
 import sys
 from pathlib import Path
@@ -72,22 +74,77 @@ EXPERIMENTS: list[tuple[str, str, list[str]]] = [
 ]
 
 
+def build_benchmark_records(df: pd.DataFrame, results_summary: list[tuple[str, str, str]]) -> list[dict]:
+    """Resume a última execução de cada experimento, na ordem da suíte."""
+    records = []
+    for tag, desc, status in results_summary:
+        matches = df[df["run_id"].str.endswith("_" + tag, na=False)]
+        row = matches.iloc[-1] if not matches.empty else {}
+        record = {"tag": tag, "description": desc, "status": status}
+        for key, convert in (
+            ("frames_processados", int), ("peixes_contados", int),
+            ("comprimento_mediano_px", float), ("erro_medio_pct", float),
+            ("tempo_execucao_s", float), ("pasta", str),
+        ):
+            value = row.get(key)
+            record[key] = convert(value) if pd.notna(value) else None
+        records.append(record)
+    return records
+
+
+def _mean_error(run_dir: Path) -> float | None:
+    try:
+        errors = pd.read_csv(run_dir / "resumo_peixes.csv", usecols=["erro_estimado_pct"])
+        mean = pd.to_numeric(errors["erro_estimado_pct"], errors="coerce").mean()
+    except (OSError, ValueError):
+        return None
+    return float(mean) if pd.notna(mean) else None
+
+
+def experiment_command(video: str, tag: str, extra_args: list[str]) -> list[str]:
+    return [PY, SCRIPT, "--video", video, "--tag", tag, *extra_args]
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Suíte controlada de 10 experimentos de Monitoramento Eletrônico.")
     parser.add_argument("--video", type=str, default=DEFAULT_VIDEO, help="Caminho do vídeo MP4/MOV (ou env FISHID_EM_VIDEO)")
-    parser.add_argument("--report-only", action="store_true", help="Apenas regenera a tabela comparativa a partir do índice")
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument("--dry-run", action="store_true",
+                      help="Imprime os comandos que seriam executados sem iniciar os experimentos")
+    mode.add_argument("--report-only", action="store_true", help="Apenas regenera a tabela comparativa a partir do índice")
+    parser.add_argument("--json-out", type=Path, help="Salva também o comparativo em JSON no caminho indicado")
+    parser.add_argument("--list", action="store_true", help="Lista os experimentos disponíveis e sai")
+    parser.add_argument("--only", nargs="+", default=None, help="Executa apenas os experimentos com as tags especificadas")
     args = parser.parse_args()
 
+    if args.list:
+        for tag, desc, _ in EXPERIMENTS:
+            print(f"{tag}: {desc}")
+        return
+
+    selected = EXPERIMENTS
+    if args.only:
+        only_set = set(args.only)
+        selected = [e for e in EXPERIMENTS if e[0] in only_set]
+        if not selected:
+            print(f"Nenhum experimento encontrado para --only {args.only}")
+            return
+
     video_arg = args.video
+    if args.dry_run:
+        for tag, _, extra_args in selected:
+            print(shlex.join(experiment_command(video_arg, tag, extra_args)))
+        return
+
     report_only = args.report_only
     results_summary = []
 
     if not report_only:
-        print(f"Iniciando suite de {len(EXPERIMENTS)} experimentos controlados...\n")
-        for i, (tag, desc, extra_args) in enumerate(EXPERIMENTS, start=1):
-            print(f"\n==================== [{i}/{len(EXPERIMENTS)}] {tag} ====================")
+        print(f"Iniciando suite de {len(selected)} experimentos controlados...\n")
+        for i, (tag, desc, extra_args) in enumerate(selected, start=1):
+            print(f"\n==================== [{i}/{len(selected)}] {tag} ====================")
             print(f"Objetivo: {desc}")
-            cmd = [PY, SCRIPT, "--video", video_arg, "--tag", tag, *extra_args]
+            cmd = experiment_command(video_arg, tag, extra_args)
             proc = subprocess.run(cmd, check=False)
             status = "OK" if proc.returncode == 0 else f"ERRO({proc.returncode})"
             results_summary.append((tag, desc, status))
@@ -98,30 +155,22 @@ def main() -> None:
     idx_path = EXP_ROOT / "indice_experimentos.csv"
     if idx_path.exists():
         df = pd.read_csv(idx_path)
-        suite_tags = {t for t, _, _ in EXPERIMENTS}
-        # Pega o último run de cada tag da suite
+        records = build_benchmark_records(df, results_summary)
         rows_md = [
             "# Comparativo Consolidado — Suite de 10 Experimentos (`30_06_2023.mp4`)",
             "",
             "| Experimento | Objetivo | Frames | Contados | Tam. Mediano (px) | Erro Médio (±%) | Tempo (s) | Pasta |",
             "| :--- | :--- | :-: | :-: | :-: | :-: | :-: | :--- |",
         ]
-        for tag, desc, status in results_summary:
-            match = df[df["run_id"].str.endswith("_" + tag)]
-            if not match.empty:
-                r = match.iloc[-1]
+        for r in records:
+            tag, desc, status = r["tag"], r["description"], r["status"]
+            if r["pasta"] is not None:
                 run_dir = Path(r["pasta"])
-                res_csv = run_dir / "resumo_peixes.csv"
-                err_str = "-"
-                if res_csv.exists() and res_csv.stat().st_size > 10:
-                    try:
-                        rdf = pd.read_csv(res_csv)
-                        if not rdf.empty and "erro_estimado_pct" in rdf.columns:
-                            err_str = f"±{rdf['erro_estimado_pct'].mean():.1f}%"
-                    except Exception:
-                        pass
+                if r["erro_medio_pct"] is None:
+                    r["erro_medio_pct"] = _mean_error(run_dir)
+                err_str = "-" if r["erro_medio_pct"] is None else f"±{r['erro_medio_pct']:.1f}%"
                 rows_md.append(
-                    f"| `{tag}` | {desc} | {int(r['frames_processados'])} | **{int(r['peixes_contados'])}** "
+                    f"| `{tag}` | {desc} | {r['frames_processados']} | **{r['peixes_contados']}** "
                     f"| {r['comprimento_mediano_px']} | {err_str} | {r['tempo_execucao_s']}s | `{run_dir.name}` |"
                 )
             else:
@@ -130,6 +179,8 @@ def main() -> None:
         out_md = EXP_ROOT / "comparativo_10_experimentos.md"
         out_md.write_text("\n".join(rows_md) + "\n", encoding="utf-8")
         print(f"\nComparativo salvo em: {out_md}")
+        if args.json_out:
+            args.json_out.write_text(json.dumps(records, ensure_ascii=False, indent=2, allow_nan=False) + "\n", encoding="utf-8")
 
 
 if __name__ == "__main__":

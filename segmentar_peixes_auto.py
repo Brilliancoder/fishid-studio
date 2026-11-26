@@ -116,6 +116,21 @@ def _select_best_box(
     return boxes_xyxy[best_idx], float(confs[best_idx]), float(areas_frac[best_idx])
 
 
+def merge_yolo_and_sam_bbox(
+    yolo_box: np.ndarray | tuple,
+    sam_bbox: tuple[int, int, int, int] | None,
+) -> np.ndarray:
+    """Return the float32 box covering the detection and, if present, the mask."""
+    if sam_bbox is None:
+        return np.asarray(yolo_box, dtype=np.float32)
+    x0, y0, x1, y1 = yolo_box
+    sx0, sy0, sx1, sy1 = sam_bbox
+    return np.array(
+        [min(x0, sx0), min(y0, sy0), max(x1, sx1), max(y1, sy1)],
+        dtype=np.float32,
+    )
+
+
 def _mask_to_clean_bbox(mask_u8: np.ndarray) -> tuple[int, int, int, int] | None:
     ys, xs = np.where(mask_u8 > 0)
     if len(xs) == 0 or len(ys) == 0:
@@ -175,6 +190,25 @@ def _sync_directory_parallel(src_root: Path, dst_root: Path, workers: int = 8) -
     with ThreadPoolExecutor(max_workers=workers) as pool:
         list(tqdm(pool.map(_copy_one, pairs), total=len(pairs), desc="Sincronizando p/ Drive", leave=False))
     return len(pairs)
+
+
+def identify_review_reasons(
+    best_conf: float,
+    num_boxes: int,
+    use_sam: bool,
+    mask_saved: bool,
+    mask_area_pct: float,
+    review_thresh: float = 0.25,
+) -> list[str]:
+    """Return the manual-review reasons in the order used by the review CSV."""
+    reasons = []
+    if best_conf < review_thresh:
+        reasons.append("baixa_confianca")
+    if num_boxes > 2:
+        reasons.append("multiplos_peixes")
+    if use_sam and mask_saved and (mask_area_pct < 3.0 or mask_area_pct > 92.0):
+        reasons.append("area_mascara_atipica")
+    return reasons
 
 
 def run_segmentation(
@@ -460,17 +494,8 @@ def run_segmentation(
                             mask_saved = True
                             mask_area_pct = round(100.0 * float(np.count_nonzero(mask_u8)) / max(inf_area, 1.0), 2)
                             tight = _mask_to_clean_bbox(mask_u8)
-                            if tight is not None:
-                                # UNIÃO da caixa YOLO + máscara SAM 2: preserva bico/rostro fino e nadadeiras longas
-                                final_box_inf = np.array(
-                                    [
-                                        min(float(best_box_inf[0]), float(tight[0])),
-                                        min(float(best_box_inf[1]), float(tight[1])),
-                                        max(float(best_box_inf[2]), float(tight[2])),
-                                        max(float(best_box_inf[3]), float(tight[3])),
-                                    ],
-                                    dtype=np.float32,
-                                )
+                            # UNIÃO da caixa YOLO + máscara SAM 2: preserva bico/rostro fino e nadadeiras longas
+                            final_box_inf = merge_yolo_and_sam_bbox(best_box_inf, tight)
 
                     # Reprojeta a caixa para a resolução ORIGINAL e recorta sem perda de qualidade
                     inv_scale = 1.0 / scale
@@ -491,13 +516,9 @@ def run_segmentation(
                         )
                     )
 
-                    motivos = []
-                    if best_conf < review_thresh:
-                        motivos.append("baixa_confianca")
-                    if len(boxes_xyxy) > 2:
-                        motivos.append("multiplos_peixes")
-                    if use_sam and mask_saved and (mask_area_pct < 3.0 or mask_area_pct > 92.0):
-                        motivos.append("area_mascara_atipica")
+                    motivos = identify_review_reasons(
+                        best_conf, len(boxes_xyxy), use_sam, mask_saved, mask_area_pct, review_thresh
+                    )
 
                     if motivos:
                         review_rows.append(
@@ -570,7 +591,7 @@ def run_segmentation(
     print(f"\nConcluído em {elapsed_min:.1f} min! Casos para revisão manual: {len(review_rows)} -> {review_csv}")
 
 
-def parse_args() -> argparse.Namespace:
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Auto-segmentação turbo de peixes (YOLO-World + SAM 2) com batch FP16 e staging local."
     )
@@ -588,7 +609,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--no-staging", action="store_true", help="Escreve direto em --out-dir sem SSD local")
     parser.add_argument("--limit", type=int, default=DEFAULT_LIMIT, help="Limita quantidade por split para teste rápido")
     # parse_known_args() ignora argumentos internos do kernel do Google Colab (-f kernel.json)
-    args, _ = parser.parse_known_args()
+    args, _ = parser.parse_known_args(argv)
     return args
 
 

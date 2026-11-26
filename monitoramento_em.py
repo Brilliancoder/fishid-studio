@@ -30,7 +30,6 @@ from pathlib import Path
 import cv2
 import numpy as np
 import pandas as pd
-import torch
 
 # =============================================================================
 # Classes open-vocabulary (otimizadas sem viés de "dolphin fish" em tubarões)
@@ -177,8 +176,16 @@ def _infer_fish_group(obs_list: list[dict]) -> tuple[str, float]:
     return best_grp, round(scores[best_grp] / total, 3)
 
 
-def _classify_crop_via_fishid_api(api_base: str, crop_path: Path) -> tuple[str, float] | None:
+def _classify_crop_via_fishid_api(
+    api_base: str,
+    crop_path: Path,
+    timeout: float = 10.0,
+) -> tuple[str, float] | None:
     """Consulta opcional à API FastAPI do FishID Studio (ConvNeXt-Tiny) para espécie científica."""
+    if not crop_path.is_file():
+        print(f"[WARN] FishID API crop not found: {crop_path}")
+        return None
+
     url = api_base.rstrip("/") + "/predict"
     boundary = "----FishIDBoundary7MA4YWxkTrZu0gW"
     img_bytes = crop_path.read_bytes()
@@ -195,14 +202,15 @@ def _classify_crop_via_fishid_api(api_base: str, crop_path: Path) -> tuple[str, 
         method="POST",
     )
     try:
-        with urllib.request.urlopen(req, timeout=10) as resp:
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
             data = json.loads(resp.read().decode("utf-8"))
         top = data.get("top_prediction") or {}
         name = top.get("display_name") or top.get("common_pt") or top.get("species")
         conf = float(top.get("confidence", 0.0))
         if name:
             return str(name), round(conf, 4)
-    except Exception:
+    except Exception as exc:
+        print(f"[WARN] FishID API request failed ({url}): {exc}")
         return None
     return None
 
@@ -693,6 +701,7 @@ def render_hud_video(
 
 
 def run_experiment(args: argparse.Namespace) -> Path:
+    import torch
     from ultralytics import SAM, YOLO
 
     t0 = time.perf_counter()
@@ -1169,7 +1178,7 @@ def run_experiment(args: argparse.Namespace) -> Path:
     return run_dir
 
 
-def parse_args() -> argparse.Namespace:
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     p = argparse.ArgumentParser(description="FishID Studio — Pipeline v5 de Monitoramento Eletrônico (EM).")
     p.add_argument("--video", type=Path, required=True)
     p.add_argument("--tag", type=str, default="v5")
@@ -1195,7 +1204,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--fishid-api", type=str, default="", help="URL opcional da API FishID (ex.: http://localhost:8000)")
     p.add_argument("--save-video", action="store_true", help="Gera vídeo MP4 anotado com HUD inteligente")
     p.add_argument("--cpu", action="store_true")
-    return p.parse_args()
+    return p.parse_args(argv)
 
 
 if __name__ == "__main__":

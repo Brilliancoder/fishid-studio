@@ -53,6 +53,28 @@ def _color_for_id(track_id: int) -> tuple[int, int, int]:
     return PALETTE_BGR[int(track_id) % len(PALETTE_BGR)]
 
 
+def _class_name(cls_idx: int) -> str:
+    idx = int(cls_idx)
+    return FISH_PROMPTS[idx] if 0 <= idx < len(FISH_PROMPTS) else str(idx)
+
+
+def _build_resumo(traj_df: pd.DataFrame) -> pd.DataFrame:
+    resumo = (
+        traj_df.groupby("track_id", as_index=False)
+        .agg(
+            frames_visiveis=("frame", "count"),
+            primeiro_segundo=("tempo_s", "min"),
+            ultimo_segundo=("tempo_s", "max"),
+            confianca_media=("confianca", "mean"),
+            largura_media_px=("largura_px", "mean"),
+            classe_prevista=("classe_prompt", lambda s: s.value_counts().idxmax()),
+        )
+        .sort_values("frames_visiveis", ascending=False)
+    )
+    resumo["duracao_em_cena_s"] = (resumo["ultimo_segundo"] - resumo["primeiro_segundo"]).round(2)
+    return resumo
+
+
 def run_tracking(
     video_path: Path,
     out_dir: Path,
@@ -124,13 +146,14 @@ def run_tracking(
             if results.boxes is not None and len(results.boxes) > 0:
                 boxes_xyxy = results.boxes.xyxy.cpu().numpy()
                 confs = results.boxes.conf.cpu().numpy()
+                classes = results.boxes.cls.int().cpu().numpy()
                 ids = (
                     results.boxes.id.int().cpu().numpy()
                     if results.boxes.id is not None
                     else np.arange(1, len(boxes_xyxy) + 1)
                 )
 
-                for box, conf, tid in zip(boxes_xyxy, confs, ids):
+                for box, conf, tid, cls_idx in zip(boxes_xyxy, confs, ids, classes):
                     x1, y1, x2, y2 = [int(round(v)) for v in box]
                     bw = max(1, x2 - x1)
                     bh = max(1, y2 - y1)
@@ -178,6 +201,7 @@ def run_tracking(
                             "largura_px": bw,
                             "altura_px": bh,
                             "confianca": round(float(conf), 4),
+                            "classe_prompt": _class_name(cls_idx),
                         }
                     )
 
@@ -230,19 +254,7 @@ def run_tracking(
     traj_df.to_csv(traj_csv, index=False)
 
     if not traj_df.empty:
-        resumo = (
-            traj_df.groupby("track_id", as_index=False)
-            .agg(
-                frames_visiveis=("frame", "count"),
-                primeiro_segundo=("tempo_s", "min"),
-                ultimo_segundo=("tempo_s", "max"),
-                confianca_media=("confianca", "mean"),
-                largura_media_px=("largura_px", "mean"),
-            )
-            .sort_values("frames_visiveis", ascending=False)
-        )
-        resumo["duracao_em_cena_s"] = (resumo["ultimo_segundo"] - resumo["primeiro_segundo"]).round(2)
-        resumo.to_csv(out_dir / "resumo_individuos.csv", index=False)
+        _build_resumo(traj_df).to_csv(out_dir / "resumo_individuos.csv", index=False)
 
     print(f"\nRastreamento concluído! Total de peixes únicos: {len(trails)}")
     print(f"Vídeo anotado: {final_video_out}")

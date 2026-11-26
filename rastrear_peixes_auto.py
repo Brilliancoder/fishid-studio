@@ -53,6 +53,38 @@ def _color_for_id(track_id: int) -> tuple[int, int, int]:
     return PALETTE_BGR[int(track_id) % len(PALETTE_BGR)]
 
 
+def format_yolo_bbox_line(
+    x1: int,
+    y1: int,
+    x2: int,
+    y2: int,
+    width: int,
+    height: int,
+    class_id: int = 0,
+) -> str:
+    """Formata coordenadas de bounding box (x1, y1, x2, y2) para linha de anotação YOLO.
+
+    Calcula coordenadas normalizadas do centro (nx, ny) e dimensões (nw, nh),
+    aplicando clamping independente para o intervalo [0.0, 1.0] com exatamente 6 casas decimais.
+    """
+    bw = max(1, x2 - x1)
+    bh = max(1, y2 - y1)
+    img_w = max(width, 1)
+    img_h = max(height, 1)
+
+    raw_nx = (x1 + bw / 2.0) / img_w
+    raw_ny = (y1 + bh / 2.0) / img_h
+    raw_nw = bw / img_w
+    raw_nh = bh / img_h
+
+    nx = 0.0 if raw_nx <= 0.0 else (1.0 if raw_nx >= 1.0 else raw_nx)
+    ny = 0.0 if raw_ny <= 0.0 else (1.0 if raw_ny >= 1.0 else raw_ny)
+    nw = 0.0 if raw_nw <= 0.0 else (1.0 if raw_nw >= 1.0 else raw_nw)
+    nh = 0.0 if raw_nh <= 0.0 else (1.0 if raw_nh >= 1.0 else raw_nh)
+
+    return f"{class_id} {nx:.6f} {ny:.6f} {nw:.6f} {nh:.6f}"
+
+
 def _class_name(cls_idx: int) -> str:
     idx = int(cls_idx)
     return FISH_PROMPTS[idx] if 0 <= idx < len(FISH_PROMPTS) else str(idx)
@@ -207,11 +239,17 @@ def run_tracking(
 
                     # Linha de anotação automática em formato YOLO (classe 0 = peixe)
                     if save_yolo_labels:
-                        nx = (x1 + bw / 2.0) / max(width, 1)
-                        ny = (y1 + bh / 2.0) / max(height, 1)
-                        nw = bw / max(width, 1)
-                        nh = bh / max(height, 1)
-                        yolo_lines.append(f"0 {nx:.6f} {ny:.6f} {nw:.6f} {nh:.6f}")
+                        yolo_lines.append(
+                            format_yolo_bbox_line(
+                                x1=x1,
+                                y1=y1,
+                                x2=x2,
+                                y2=y2,
+                                width=width,
+                                height=height,
+                                class_id=0,
+                            )
+                        )
 
             # Salva rótulo YOLO automático a cada 5 frames com detecções (evita frames redundantes)
             if save_yolo_labels and yolo_lines and frame_idx % 5 == 0:

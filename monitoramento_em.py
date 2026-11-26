@@ -176,8 +176,16 @@ def _infer_fish_group(obs_list: list[dict]) -> tuple[str, float]:
     return best_grp, round(scores[best_grp] / total, 3)
 
 
-def _classify_crop_via_fishid_api(api_base: str, crop_path: Path) -> tuple[str, float] | None:
+def _classify_crop_via_fishid_api(
+    api_base: str,
+    crop_path: Path,
+    timeout: float = 10.0,
+) -> tuple[str, float] | None:
     """Consulta opcional à API FastAPI do FishID Studio (ConvNeXt-Tiny) para espécie científica."""
+    if not crop_path.is_file():
+        print(f"[WARN] FishID API crop not found: {crop_path}")
+        return None
+
     url = api_base.rstrip("/") + "/predict"
     boundary = "----FishIDBoundary7MA4YWxkTrZu0gW"
     img_bytes = crop_path.read_bytes()
@@ -194,14 +202,15 @@ def _classify_crop_via_fishid_api(api_base: str, crop_path: Path) -> tuple[str, 
         method="POST",
     )
     try:
-        with urllib.request.urlopen(req, timeout=10) as resp:
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
             data = json.loads(resp.read().decode("utf-8"))
         top = data.get("top_prediction") or {}
         name = top.get("display_name") or top.get("common_pt") or top.get("species")
         conf = float(top.get("confidence", 0.0))
         if name:
             return str(name), round(conf, 4)
-    except Exception:
+    except Exception as exc:
+        print(f"[WARN] FishID API request failed ({url}): {exc}")
         return None
     return None
 
